@@ -1,11 +1,15 @@
 package com.inchikutty.SafeIndoors;
 
-import androidx.fragment.app.FragmentActivity;
 
 import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Toast;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -13,6 +17,13 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.IndoorBuilding;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import androidx.fragment.app.FragmentActivity;
+import androidx.recyclerview.widget.RecyclerView;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
@@ -24,12 +35,21 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         setContentView(R.layout.activity_maps);
         Intent indoorIntent = getIntent();
         String username = indoorIntent.getStringExtra("username");
+        RecyclerView recyclerView;
         Toast.makeText(getApplicationContext(), username, Toast.LENGTH_LONG).show();
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+        //// Get a RequestQueue
+        RequestQueue queue = VolleySingleton.getInstance(this.getApplicationContext()).getRequestQueue();
+        //// Add a request (in this example, called stringRequest) to your RequestQueue.
+        //VolleySingleton.getInstance(this).addToRequestQueue(stringRequest);
+        //TransferLearningModel model =
+         //       new TransferLearningModel(
+         //               new AssetModelLoader(getActivity(), "path/to/your/model/under/assets"),
+         //               Arrays.asList("Class A", "Class B", "Class C", "Class D"));
     }
 
 
@@ -107,5 +127,30 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
              return "not exposed";
          }
      }
+
+    private void MakeVolleyConnection() {
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET,
+                "https://reqres.in/api/users?page=1", null, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                try {
+                    JSONArray dataArray = response.getJSONArray("data");
+                    for (int i = 0; i < dataArray.length(); i++) {
+                        JSONObject userData = dataArray.getJSONObject(i);
+                    }
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Toast.makeText(MapsActivity.this, ""+error.networkResponse,Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        VolleySingleton.getInstance(this).addToRequestQueue(jsonObjectRequest);
+    }
 
 }
